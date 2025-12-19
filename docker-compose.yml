@@ -7,6 +7,8 @@ services:
       - .env
     volumes:
       - mariadb_data:/var/lib/mysql
+    expose:
+      - "3306"
     restart: always
 
 volumes:

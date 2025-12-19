@@ -1,33 +1,41 @@
 #!/bin/bash
+set -e
 
-set -e 
+mkdir -p /run/mysqld
+chown -R mysql:mysql /run/mysqld
 
-: "${MYSQL_DATABASE:?MYSQL_DATABASE is not set}"
-: "${MYSQL_USER:?MYSQL_USER is not set}"
-: "${MYSQL_PASSWORD:?MYSQL_PASSWORD is not set}"
-: "${MYSQL_ROOT_PASSWORD:?MYSQL_ROOT_PASSWORD is not set}"
+if [ -z "$(ls -A /var/lib/mysql)" ]; then
+    echo "First run -- initializing MariaDB data directory"
 
-mariadbd --user=mysql --skip-networking --skip-grant-tables &
-pid="$!"
+    mysql_install_db --user=mysql --datadir=/var/lib/mysql
 
-until mysqladmin ping --silent; do
-    sleep 1
-done
+    mysqld_safe --user=mysql --datadir=/var/lib/mysql &
+    pid="$!"
 
-if ! mysql -u root -e "USE wordpress;" 2>/dev/null; then
+    until mysqladmin ping --silent; do
+        sleep 1
+    done
+
+    echo "Setting root password"
+    mysql -uroot -e "
+        ALTER USER 'root'@'localhost'
+        IDENTIFIED BY '${MYSQL_ROOT_PASSWORD}';
+        FLUSH PRIVILEGES;
+    "
+
     echo "Creating WordPress database and user"
-
-    mysql -u root << EOF
+    mysql -uroot -p"${MYSQL_ROOT_PASSWORD}" <<EOF
 CREATE DATABASE IF NOT EXISTS ${MYSQL_DATABASE};
 CREATE USER IF NOT EXISTS '${MYSQL_USER}'@'%' IDENTIFIED BY '${MYSQL_PASSWORD}';
 GRANT ALL PRIVILEGES ON ${MYSQL_DATABASE}.* TO '${MYSQL_USER}'@'%';
-ALTER USER 'root'@'localhost' IDENTIFIED BY '${MYSQL_ROOT_PASSWORD}';
 FLUSH PRIVILEGES;
 EOF
 
+    echo "Stopping temporary MariaDB"
+    mysqladmin -uroot -p"${MYSQL_ROOT_PASSWORD}" shutdown
+
+    wait "$pid"
 fi
 
-mysqladmin shutdown
-wait "$pid"
-
+echo "Starting MariaDB normally"
 exec "$@"

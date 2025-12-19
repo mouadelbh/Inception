@@ -7,10 +7,9 @@ RUN apt-get update \
 RUN mkdir -p /run/mysqld /var/lib/mysql \
  && chown -R mysql:mysql /run/mysqld /var/lib/mysql
 
+COPY /conf/50-server.cnf /etc/mysql/mariadb.conf.d/50-server.cnf
 COPY tools/setup.sh /usr/local/bin/setup.sh
 RUN chmod +x /usr/local/bin/setup.sh
 
-EXPOSE 3306
-
 ENTRYPOINT ["/usr/local/bin/setup.sh"]
-CMD ["mariadbd", "--user=mysql", "--console"]
+CMD ["mariadbd", "--user=mysql", "--bind-address=0.0.0.0", "--console"]
