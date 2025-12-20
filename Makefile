@@ -20,36 +20,35 @@ help:
 	@echo "  make help        - Show this help message"
 
 build:
-	docker compose -p $(PROJECT_NAME) build
+	docker compose -f srcs/docker-compose.yml -p $(PROJECT_NAME) build --no-cache
 
 up:
-	docker compose -p $(PROJECT_NAME) up -d
+	docker compose -f srcs/docker-compose.yml -p $(PROJECT_NAME) up -d 
 	@echo "✓ Containers started in detached mode"
 
 down:
-	docker compose -p $(PROJECT_NAME) down
+	docker compose -f srcs/docker-compose.yml -p $(PROJECT_NAME) down 
 	@echo "✓ Containers stopped and removed"
 
 stop:
-	docker compose -p $(PROJECT_NAME) stop
+	docker compose -f srcs/docker-compose.yml -p $(PROJECT_NAME) stop 
 	@echo "✓ Containers stopped"
 
 start:
-	docker compose -p $(PROJECT_NAME) start
+	docker compose -f srcs/docker-compose.yml -p $(PROJECT_NAME) start 
 	@echo "✓ Containers started"
 
 restart:
-	docker compose -p $(PROJECT_NAME) restart
+	docker compose -f srcs/docker-compose.yml -p $(PROJECT_NAME) restart 
 	@echo "✓ Containers restarted"
 
 logs:
-	docker compose -p $(PROJECT_NAME) logs -f
-
+	docker compose -f srcs/docker-compose.yml -p $(PROJECT_NAME) logs -f
 ps:
-	docker compose -p $(PROJECT_NAME) ps
+	docker compose -f srcs/docker-compose.yml -p $(PROJECT_NAME) ps
 
 clean:
-	docker compose -p $(PROJECT_NAME) down -v
+	docker compose -f srcs/docker-compose.yml -p $(PROJECT_NAME) down -v
 	@echo "✓ Containers, volumes, and networks removed"
 
 re: clean build up
