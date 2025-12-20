@@ -9,7 +9,39 @@ services:
       - mariadb_data:/var/lib/mysql
     expose:
       - "3306"
-    restart: always
+    networks:
+      - inception
+    restart: unless-stopped
+  wordpress:
+    container_name: wordpress
+    build:
+      context: ./requirements/wordpress
+    env_file:
+      - .env
+    expose:
+      - "9000"
+    volumes:
+      - wordpress_data:/var/www/html
+    depends_on:
+      - mariadb
+    networks:
+      - inception
+    restart: unless-stopped
+  nginx:
+    container_name: nginx
+    build:
+      context: ./requirements/nginx
+    env_file:
+      - .env
+    volumes:
+      - wordpress_data:/var/www/html:ro
+    depends_on:
+      - wordpress
+    networks:
+      - inception
+    ports:
+      - "443:443"
+    restart: unless-stopped
 
 volumes:
   mariadb_data:
@@ -18,3 +50,13 @@ volumes:
       type: none
       o: bind
       device: /home/mel-bouh/data/mysql
+  wordpress_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /home/mel-bouh/data/www
+
+networks:
+  inception:
+    driver: bridge
