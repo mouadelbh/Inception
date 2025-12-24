@@ -46,6 +46,25 @@ if ! wp core is-installed --path=/var/www/html --allow-root; then
         --path=/var/www/html \
         --allow-root
 
+    # BONUS: Install and configure Redis Object Cache
+    echo "Configuring Redis cache..."
+    wp plugin install redis-cache --activate \
+        --path=/var/www/html \
+        --allow-root
+
+    # Add Redis configuration to wp-config.php
+    # WP_REDIS_HOST: hostname of Redis container
+    # WP_REDIS_PORT: default Redis port
+    # WP_CACHE: enables object caching
+    sed -i "/\/\* That's all, stop editing!/i \\
+\/\* Redis Cache Configuration \*\/\n\
+define('WP_REDIS_HOST', 'redis');\n\
+define('WP_REDIS_PORT', 6379);\n\
+define('WP_CACHE', true);\n" /var/www/html/wp-config.php
+
+    # Enable Redis object cache
+    wp redis enable --path=/var/www/html --allow-root || true
+
     echo "WordPress installed automatically!"
 else
     echo "WordPress already installed."

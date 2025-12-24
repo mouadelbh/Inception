@@ -2,7 +2,7 @@ services:
   mariadb:
     container_name: mariadb
     build:
-      context: ./srcs/mariadb
+      context: ./requirements/mariadb
     env_file:
       - .env
     volumes:
@@ -15,7 +15,7 @@ services:
   wordpress:
     container_name: wordpress
     build:
-      context: ./srcs/wordpress
+      context: ./requirements/wordpress
     env_file:
       - .env
     expose:
@@ -24,13 +24,14 @@ services:
       - wordpress_data:/var/www/html
     depends_on:
       - mariadb
+      - redis
     networks:
       - inception
     restart: unless-stopped
   nginx:
     container_name: nginx
     build:
-      context: ./srcs/nginx
+      context: ./requirements/nginx
     env_file:
       - .env
     volumes:
@@ -41,6 +42,57 @@ services:
       - inception
     ports:
       - "443:443"
+    restart: unless-stopped
+
+  # BONUS: Adminer - Database management web interface
+  adminer:
+    container_name: adminer
+    build:
+      context: ./requirements/bonus/adminer
+    depends_on:
+      - mariadb
+    networks:
+      - inception
+    expose:
+      - "8080"
+    restart: unless-stopped
+
+  # BONUS: Static website (portfolio) - no PHP
+  static-site:
+    container_name: static-site
+    build:
+      context: ./requirements/bonus/static-site
+    networks:
+      - inception
+    expose:
+      - "8080"
+    restart: unless-stopped
+
+  # BONUS: Redis cache for WordPress
+  redis:
+    container_name: redis
+    build:
+      context: ./requirements/bonus/redis
+    networks:
+      - inception
+    expose:
+      - "6379"
+    restart: unless-stopped
+
+  # BONUS: FTP server for WordPress file management
+  ftp:
+    container_name: ftp
+    build:
+      context: ./requirements/bonus/ftp
+    env_file:
+      - .env
+    volumes:
+      - wordpress_data:/var/www/html
+    ports:
+      - "21:21"
+      - "21100-21110:21100-21110"
+    networks:
+      - inception
     restart: unless-stopped
 
 volumes:
