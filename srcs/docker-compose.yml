@@ -95,7 +95,26 @@ services:
       - inception
     restart: unless-stopped
 
+  # BONUS: Uptime Monitor - Website health monitoring service
+  uptime-monitor:
+    container_name: uptime-monitor
+    build:
+      context: ./requirements/bonus/uptime-monitor
+    networks:
+      - inception
+    expose:
+      - "5000"
+    volumes:
+      - uptime_monitor_data:/data
+    restart: unless-stopped
+
 volumes:
+  uptime_monitor_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /home/mel-bouh/data/uptime-monitor
   mariadb_data:
     driver: local
     driver_opts:
